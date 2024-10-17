@@ -10,10 +10,12 @@ import os
 
 load_dotenv()
 ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
-
+mongo_uri = os.environ.get('MONGODB_URI')
 # MongoDB Configuration
 try:
-    client = pymongo.MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=5000)
+    # client = pymongo.MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=5000)
+    client = pymongo.MongoClient('mongo_uri')
+
     # The serverSelectionTimeoutMS option limits the amount of time the connection attempt will wait for a response
     db = client['admin']  # Database name
     collectionA = db['adidas']  # Collection name

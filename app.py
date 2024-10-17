@@ -16,16 +16,19 @@ import time
 import re
 import os
 import shopify
-
+from dotenv import load_dotenv
 import json
 
 app = Flask(__name__)
 
+load_dotenv()
 
-
+mongo_uri = os.environ.get('MONGODB_URI')
 # MongoDB Configuration
 try:
-    client = pymongo.MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=5000)
+    # client = pymongo.MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=5000)
+    client = pymongo.MongoClient('mongo_uri')
+
     # The serverSelectionTimeoutMS option limits the amount of time the connection attempt will wait for a response
     db = client['admin']  # Database name
     collectionA = db['adidas']  # Collection name

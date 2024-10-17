@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Product Scraper Dashboard</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      background-color: #edeff1;
+      font-family: 'Poppins', sans-serif;
+    }
+    .container-fluid {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .main-content {
+      display: flex;
+      height: 100%;
+      margin-top: 20px;
+    }
+    .left-panel {
+      background-color: #343a40;
+      color: white;
+      padding: 20px;
+      width: 20%;
+      border-radius: 15px;
+    }
+    .right-panel {
+      background-color: #f1f1f1;
+      padding: 20px;
+      width: 80%;
+      border-radius: 15px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.1);
+    }
+    .status-text {
+      margin-top: 20px;
+    }
+    .product-table img {
+      max-width: 80px;
+      cursor: pointer;
+    }
+    .product-detail img {
+      max-width: 150px;
+    }
+    .left-panel h3 {
+      color: #00d4ff;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+    #startScrapingBtn {
+      background-color: #00d4ff;
+      border: none;
+      color: #fff;
+    }
+    #uploadBtn {
+      background-color: #ffc107;
+      border: none;
+      color: #000;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 text-center">
+        <h1 class="fw-bold" style="color: #00d4ff;">Modern Product Scraper Dashboard</h1>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <!-- Left Panel -->
+      <div class="left-panel">
+        <h3>Scraping Options</h3>
+
+        <!-- Target URL Input with Dropdown -->
+        <div class="form-group mb-3">
+          <label for="urlInput">Select or Enter Target Site:</label>
+          <input list="siteOptions" class="form-control" id="urlInput" placeholder="https://example.com">
+          <datalist id="siteOptions">
+            <option value="https://usgstore.com">
+            <option value="https://otherstore.com">
+            <option value="https://mystore.com">
+          </datalist>
+        </div>
+
+        <!-- Gender Input with Dropdown -->
+        <div class="form-group mb-3">
+          <label for="genderInput">Select or Enter Gender:</label>
+          <input list="genderOptions" class="form-control" id="genderInput" placeholder="Men, Women, Unisex">
+          <datalist id="genderOptions">
+            <option value="Men">
+            <option value="Women">
+            <option value="Unisex">
+          </datalist>
+        </div>
+
+        <!-- Category Input with Dropdown -->
+        <div class="form-group mb-3">
+          <label for="categoryInput">Select or Enter Category:</label>
+          <input list="categoryOptions" class="form-control" id="categoryInput" placeholder="Shoes, Clothing, Accessories">
+          <datalist id="categoryOptions">
+            <option value="Shoes">
+            <option value="Clothing">
+            <option value="Accessories">
+          </datalist>
+        </div>
+
+        <!-- Buttons -->
+        <button class="btn btn-block mt-3" id="startScrapingBtn">Start Scraping</button>
+        <button class="btn btn-block mt-3" id="uploadBtn">Upload Products</button>
+
+        <!-- Scraping Status -->
+        <div id="scrapingStatus" class="status-text">
+          <h5 class="mt-4">Scraping Status:</h5>
+          <p id="statusMessage">Idle...</p>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="right-panel">
+        <h3>Scraped Products</h3>
+        
+        <!-- Product Table -->
+        <table class="table table-hover table-bordered product-table">
+          <thead class="table-dark">
+            <tr>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Gender</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productTableBody">
+            <!-- Dynamically add products here -->
+          </tbody>
+        </table>
+
+        <!-- Product Detail -->
+        <div class="product-detail" id="productDetail" style="display: none;">
+          <h4>Product Details</h4>
+          <img src="{{ product['Image'] }}" alt="Product Image">
+
+          <p><strong>Title: </strong><span id="productTitle"></span></p>
+          <p><strong>Category: </strong><span id="productCategory"></span></p>
+          <p><strong>Gender: </strong><span id="productGender"></span></p>
+          <p><strong>Description: </strong><span id="productDescription"></span></p>
+          <button class="btn btn-primary" id="changeImageBtn">Change Image</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Flask-SocketIO integration -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/socket.io@4.0.0/dist/socket.io.min.js"></script> -->
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+
+  
+  <script>
+    const socket = io(); // Flask-SocketIO for real-time communication
+    
+    let products = []; // Store products here
+
+    // Start Scraping Button click
+// Start Scraping Button click
+$('#startScrapingBtn').on('click', function() {
+  const targetUrl = $('#urlInput').val();
+  const gender = $('#genderInput').val();
+  const category = $('#categoryInput').val();
+
+  // Send POST request to /scrape route
+  $.ajax({
+    url: '/scrape',
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ url: targetUrl, gender: gender, category: category }),
+    success: function(response) {
+      // Display success message and update product table
+      socket.emit('update', { message: 'Scraping started...' });
+    },
+    error: function(error) {
+      console.log('Error:', error);
+    }
+  });
+});
+
+// Listen for real-time updates from SocketIO
+socket.on('update', (data) => {
+  // Update scraping status on the UI
+  $('#statusMessage').text(data.message);
+
+  // If the scraping is finished, update the table with products
+  if (data.message.includes("Scraped product")) {
+    // Assuming data.message contains a product title, update the UI to show the scraped product
+    const scrapedProduct = data.message.replace("Scraped product: ", "");
+
+    // Add the scraped product details to the table
+    const productRow = `
+      <tr>
+        <td><img src="product-image-placeholder.jpg" alt="Product Image" class="img-thumbnail"></td>
+        <td>${scrapedProduct}</td>
+        <td>Category</td>
+        <td>Gender</td>
+        <td><button class="btn btn-info">View</button></td>
+      </tr>`;
+    $('#productTableBody').append(productRow);
+  }
+});
+
+
+    // Handle Scraping Progress
+    socket.on('scraping_progress', (data) => {
+      $('#statusMessage').text(data.status);
+    });
+
+    // When scraping is finished, show products in table
+    socket.on('scraping_finished', (data) => {
+      products = data.products;
+      $('#statusMessage').text('Scraping finished!');
+      updateProductTable();
+    });
+
+    // Update Product Table
+    function updateProductTable() {
+      const tbody = $('#productTableBody');
+      tbody.empty(); // Clear existing rows
+
+      products.forEach((product, index) => {
+        const row = `
+          <tr>
+            <td><img src="${product.image}" alt="Product Image" class="img-thumbnail"></td>
+            <td>${product.title}</td>
+            <td>${product.category}</td>
+            <td>${product.gender}</td>
+            <td><button class="btn btn-info" onclick="viewProductDetail(${index})">View</button></td>
+          </tr>
+        `;
+        tbody.append(row);
+      });
+    }
+
+    // View Product Details
+    function viewProductDetail(index) {
+      const product = products[index];
+      $('#productDetail').show();
+      $('#productImage').attr('src', product.image);
+      $('#productTitle').text(product.title);
+      $('#productCategory').text(product.category);
+      $('#productGender').text(product.gender);
+      $('#productDescription').text(product.description || 'No description available');
+    }
+
+    // Change Product Image (future functionality)
+    $('#changeImageBtn').on('click', function() {
+      alert('Change image functionality not implemented yet!');
+    });
+  </script>
+</body>
+</html>

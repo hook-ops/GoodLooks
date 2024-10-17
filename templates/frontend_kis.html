@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Store Forms</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+   <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      background-color: #dadddf;
+      font-family: 'Poppins', sans-serif;
+    }
+    .store-btn {
+      margin-bottom: 10px;
+      width: 100%; /* Expand button to full width of the panel */
+    }
+    .store-form {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #454d55;
+      color: white;
+      border-radius: 8px;
+    }
+
+    .store-btn {
+      text-align: left;
+    }
+    .left-panel {
+      background-color: #343a40;
+      color: white;
+      padding: 20px;
+      width: 17%; /* Set left panel width */
+      border-radius: 15px;
+      box-shadow: slategray;
+    }
+    .right-panel {
+      background-color: #f1f1f1;
+      padding: 20px;
+      width: 83%;
+      border-radius: 15px;
+      margin-left : 10px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.1);
+    }
+    .main-content {
+      display: flex;
+      height: 100%;
+      margin-top: 20px;
+    }
+    .container-fluid {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container-fluid">
+    <h1 class="text-center">Store Scraper Dashboard</h1>
+    <img src="//www.goodlooksofficial.com.au/cdn/shop/files/GOOD_LOOKS_MP_LOGO_3_png__1_-removebg-preview.png?v=1726128784&amp;width=160" srcset="//www.goodlooksofficial.com.au/cdn/shop/files/GOOD_LOOKS_MP_LOGO_3_png__1_-removebg-preview.png?v=1726128784&amp;width=180 180w,//www.goodlooksofficial.com.au/cdn/shop/files/GOOD_LOOKS_MP_LOGO_3_png__1_-removebg-preview.png?v=1726128784&amp;width=360 360w,//www.goodlooksofficial.com.au/cdn/shop/files/GOOD_LOOKS_MP_LOGO_3_png__1_-removebg-preview.png?v=1726128784&amp;width=540 540w,//www.goodlooksofficial.com.au/cdn/shop/files/GOOD_LOOKS_MP_LOGO_3_png__1_-removebg-preview.png?v=1726128784&amp;width=160 160w,//www.goodlooksofficial.com.au/cdn/shop/files/GOOD_LOOKS_MP_LOGO_3_png__1_-removebg-preview.png?v=1726128784&amp;width=320 320w,//www.goodlooksofficial.com.au/cdn/shop/files/GOOD_LOOKS_MP_LOGO_3_png__1_-removebg-preview.png?v=1726128784&amp;width=480 480w
+            " width="158" height="16" loading="eager" sizes="(min-width: 1024px) 160px, 180px" alt="Good Looks" data-xblocker="passed" style="visibility: visible; position:absolute; top: 30px; left: 30px;" >
+    
+    <!-- Left Panel with Store List -->
+    <div class="main-content">
+      <div class="left-panel">
+        <h3>Stores</h3>
+        <div id="storeButtonsContainer" class="store-buttons">
+          <!-- Store buttons and forms will be dynamically generated here -->
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <h3>Scraped Products</h3>
+        
+        <!-- Product Table -->
+        <table class="table table-hover table-bordered product-table">
+          <thead class="table-dark">
+            <tr>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Brand</th>
+              <th>Color</th>
+              <th>Gender</th>
+              <th>Material</th>
+              <th>Age Group</th>
+              <th>Size</th>
+              <th>SKU</th>
+              <th>GTIN/UPC/Barcode</th>
+              <th>Weight</th>
+              <th>Product Detail</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody id="productTableBody">
+            <!-- Dynamically add products here -->
+          </tbody>
+          <!-- Variants Table -->
+          <tbody id="variantTableBody">
+            <!-- Variants will be dynamically added here -->
+          </tbody>
+        </table>
+
+        <!-- Product Detail -->
+        
+      </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bootstrap 5 and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <!-- Dynamic Form Generation -->
+  <script>
+
+     // Function to append product variants
+     function appendVariantRow(variant) {
+      const variantRow = `
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>${variant.size}</td>
+          <td>${variant.sku}</td>
+          <td>${variant.barcode}</td>
+          <td>${variant.weight}</td>
+          <td></td>
+          <td>${variant.quantity}</td>
+        </tr>`;
+      $('#variantTableBody').append(variantRow);
+    }
+
+    // Array of store objects
+    const stores = [
+      { id: 'store1', name: 'USGStore' },
+      { id: 'store2', name: 'Above The Clouds' },
+      { id: 'store3', name: 'Clique' },
+      { id: 'store4', name: 'Concrete Jungle' },
+      { id: 'store5', name: 'Finesse' },
+      { id: 'store6', name: 'Hemley Store' },
+      { id: 'store7', name: 'Highs and Lows' },
+      { id: 'store8', name: 'Laced' },
+      { id: 'store9', name: 'Mi-Life' },
+      { id: 'store10', name: 'Prime' },
+      { id: 'store11', name: 'Sneaker Lounge' },
+      { id: 'store12', name: 'Supply Store' },
+      { id: 'store13', name: 'Trainers' },
+      { id: 'store14', name: 'Up There' },
+      // Add more stores as needed
+    ];
+
+    // Dynamically generate store buttons and forms
+    stores.forEach((store, index) => {
+      // Create store button
+      $('#storeButtonsContainer').append(`
+        <button class="btn btn-secondary store-btn" data-store="${store.id}">${store.name}</button>
+        <div id="${store.id}Form" class="store-form">
+          <h5>${store.name} Scraper</h5>
+          <div class="mb-2">
+            <label for="urlInput${index}">Target URL:</label>
+            <input type="text" class="form-control" id="urlInput${index}" placeholder="https://example.com">
+          </div>
+          
+          <div class="mb-2">
+            <label for="brandInput${index}">Brand:</label>
+            <select class="form-control" id="brandInput${index}">
+              <option value="Nike">Nike</option>
+              <option value="Adidas">Adidas</option>
+              <option value="Jordan">Jordan</option>
+            </select>
+          </div>
+          <button class="btn btn-primary mb-2" id="startScrapingBtn${index}">Start Scraping</button>
+          <button class="btn btn-warning mb-2">Upload Products</button>
+          <button class="btn btn-success mb-2" id="exportCSVBtn">Export CSV</button>
+        </div>
+      `);
+    });
+
+    // Initially hide all forms
+    $('.store-form').hide();
+
+    // Store button click event to toggle corresponding form visibility
+    $('.store-btn').on('click', function() {
+      const storeId = $(this).data('store');  // Get store ID from button
+      $(`#${storeId}Form`).toggle();  // Toggle the visibility of the corresponding form
+    });
+
+    // Example scraping function
+    stores.forEach((store, index) => {
+      $(`#startScrapingBtn${index}`).on('click', function() {
+        const url = $(`#urlInput${index}`).val();
+        // const gender = $(`#genderInput${index}`).val();
+        const brand = $(`#brandInput${index}`).val();
+
+        // Make AJAX request with these values
+        $.ajax({
+            url: '/scrape',
+            method: 'POST',
+            contentType: 'application/json',
+            // data: JSON.stringify({ url: url, brand: brand }),
+            data: JSON.stringify({ url: url, brand: brand }),
+            success: function(response) {
+                console.log('Scraping response:', response);
+                $('#statusMessage').text(`Scraping started for ${store.name}...`);
+            },
+            error: function(error) {
+                console.log('Error:', error);
+            }
+        });
+        
+        console.log(`Scraping started for ${store.name} with URL: ${url}, Gender: ${gender}, Category: ${category}`);
+        $('#statusMessage').text(`Scraping ${store.name}...`);
+
+        // Add your scraping logic here using AJAX or other methods
+      });
+    });
+
+    const socket = io(); // Flask-SocketIO for real-time communication
+    
+    let products = []; // Store products here
+
+    
+    // Listen for real-time updates from SocketIO
+    socket.on('update', (data) => {
+      // Update scraping status on the UI
+    //   $('#statusMessage').text(data.message);
+
+      // If the scraping is finished, update the table with products
+      if (data.product) {
+        // Assuming data.message contains a product title, update the UI to show the scraped product
+        // const product = data.message.replace("Scraped product: ", "");
+        console.log("Product data received:", data.product);
+        const product = data.product;
+        // const product = data.product;
+        // Add the scraped product details to the table
+        const productRow = `
+          <tr>
+              <td><img src="${product.Image !== 'No image found' ? product.Image : 'placeholder.jpg'}" alt="Product Image" class="img-thumbnail" id="productImage_${product.id}" style="cursor:pointer;">
+                <input type="file" id="imageUploadInput_${product.id}" style="display: none;" accept="image/*">
+              </td>
+              <td>${product.Title || 'N/A'}</td>
+              <td>${product.Brand || 'N/A'}</td>
+              <td>${product.Color || 'N/A'}</td>
+              <td>${product.Gender || 'N/A'}</td>
+              <td>${product.Material || 'N/A'}</td>
+              <td>${product['Age group'] || 'N/A'}</td>
+              <td>${product.Size || 'N/A'}</td>
+              <td>${product.SKU || 'N/A'}</td>
+              <td>${product['Barcode'] || 'N/A'}</td>
+              <td>${product.Weight || 'N/A'}</td>
+              <td>${product['Product detail'] || 'N/A'}</td>
+              <td>${product.Quantity || 'N/A'}</td>
+          </tr>
+          `;
+
+        // Append variants if available
+        if (product.Variants && product.Variants.length > 0) {
+          product.Variants.forEach(variant => {
+            appendVariantRow({
+              id: variant.ID,
+              size: variant.Size,
+              sku: variant.SKU,
+              barcode: variant.Barcode,
+              weight: variant.Weight,
+              quantity: variant.Quantity
+            });
+          });
+        }
+        $('#productTableBody').append(productRow);
+
+         // Now add the event listeners for image click and file upload after the row is appended
+        $(`#productImage_${product.id}`).on('click', function() {
+            $(`#imageUploadInput_${product.id}`).click();  // Trigger the hidden file input
+        });
+        // Handle image upload and replace the current image
+        $(`#imageUploadInput_${product.id}`).on('change', function(event) {
+            var formData = new FormData();
+            var file = event.target.files[0];
+            formData.append('image', file);
+            // Upload the image to the server
+            fetch('/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the product image with the newly uploaded image
+                    $(`#productImage_${product.id}`).attr('src', data.imageUrl);
+                } else {
+                    alert('Image upload failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+      }
+    });
+
+    // Handle Scraping Progress
+    socket.on('scraping_progress', (data) => {
+      $('#statusMessage').text(data.status);
+    });
+
+    // When scraping is finished, show products in table
+     // When scraping is finished, show products and variants in the table
+    //  socket.on('scraping_finished', (data) => {
+    //   $('#statusMessage').text('Scraping finished!');
+    //   if (data.products && data.products.length > 0) {
+    //     data.products.forEach(product => {
+    //       appendProductRow(product);
+    //       if (product.variants && product.variants.length > 0) {
+    //         product.variants.forEach(variant => {
+    //           appendVariantRow(variant);
+    //         });
+    //       }
+    //     });
+    //   }
+    // });
+
+    // Update Product Table
+    // function updateProductTable() {
+    //   const tbody = $('#productTableBody');
+    //   tbody.empty(); // Clear existing rows
+
+    //   products.forEach((product, index) => {
+    //     const row = `
+    //         <tr>
+    //           <td><img src="${product.Image !== 'No image found' ? product.Image : 'placeholder.jpg'}" alt="Product Image" class="img-thumbnail"></td>
+    //           <td>${product.Title}</td>
+    //           <td>${product.Brand}</td>
+    //           <td>${product.Color}</td>
+    //           <td>${product.Gender}</td>
+    //           <td>${product.Material}</td>
+    //           <td>${product['Age group']}</td>
+    //           <td>${product.Size || 'N/A'}</td>
+    //           <td>${product.SKU || 'N/A'}</td>
+    //           <td>${product['GTIN/UPC/Barcode'] || 'N/A'}</td>
+    //           <td>${product.Weight || 'N/A'}</td>
+    //           <td>${product['Product detail'] || 'N/A'}</td>
+    //           <td>${product.Quantity || 'N/A'}</td>
+    //         </tr>`;
+    //     tbody.append(row);
+    //   });
+    // }
+
+    // Export csv file
+    // Function to get today's date in the format YYYY-MM-DD
+    // Function to get today's date in the format YYYY-MM-DD
+    function getTodayDate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Function to download table data as a CSV file
+    function exportTableToCSV(filename) {
+      var csv = [];
+      var rows = document.querySelectorAll("table tr");
+    
+      // Loop through each row and extract its cells' data
+      for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll("td, th");
+      
+        for (var j = 0; j < cols.length; j++) {
+          row.push('"' + cols[j].innerText + '"');  // Wrap each cell value in quotes for safety
+        }
+      
+        csv.push(row.join(","));  // Join each row with commas to form a CSV row
+      }
+    
+      // Create a downloadable CSV blob
+      var csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    
+      // Create a link element to trigger the download
+      var downloadLink = document.createElement("a");
+      downloadLink.download = filename;
+    
+      // Create a URL for the CSV blob and set it as the href for the download link
+      downloadLink.href = window.URL.createObjectURL(csvFile);
+    
+      // Append the link to the body and trigger the download
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+
+    // Add event listener for CSV export
+    document.getElementById("exportCSVBtn").addEventListener("click", function () {
+      // Get the active store's name
+      const selectedStore = document.querySelector('.store-btn.active').textContent.trim();
+    
+      // Get today's date
+      const todayDate = getTodayDate();
+    
+      // Generate filename using store name and today's date
+      const filename = `${selectedStore}_${todayDate}.csv`;
+    
+      // Call function to export table data as CSV
+      exportTableToCSV(filename);
+    });
+
+    // Ensure active store is tracked by adding an "active" class
+    $('.store-btn').on('click', function() {
+      $('.store-btn').removeClass('active');  // Remove active class from all buttons
+      $(this).addClass('active');  // Add active class to the clicked button
+    });
+
+   
+  </script>
+
+</body>
+</html>

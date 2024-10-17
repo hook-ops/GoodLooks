@@ -33,7 +33,7 @@ try:
     collectionC = db['jordan']
     # Check if the server is available
     client.admin.command('ping')
-    print("MongoDB connection successful!")
+    print("MongoDB connection successful!")    
     
 except ConnectionFailure as e:
     print(f"MongoDB connection failed: {e}")

@@ -186,33 +186,33 @@ def set_inventory_with_retry(location_id, inventory_item_id, quantity, retries=5
     print(f"Failed to update inventory after {retries} attempts.")
 
 # Main process to upload or update products
-# def upload_product_to_shopify(m_product):
+def upload_product_to_shopify(m_product):
     
-product_data = transform_mongo_to_shopify(adidas_products[0])
-print(f"Checking SKU: {product_data['variants'][0]['sku']}")
-# Check if the product already exists by SKU
-existing_product = product_exists_by_sku(product_data['variants'][0]['sku'])  # Use SKU of first variant
+    product_data = transform_mongo_to_shopify(adidas_products[0])
+    print(f"Checking SKU: {product_data['variants'][0]['sku']}")
+    # Check if the product already exists by SKU
+    existing_product = product_exists_by_sku(product_data['variants'][0]['sku'])  # Use SKU of first variant
 
-if existing_product:
-    print(f"Product with SKU {product_data['variants'][0]['sku']} already exists with ID: {existing_product.id}")
-    # Update the existing product with new data
-    updated_product = update_existing_product(existing_product, product_data)
-    print(f"Product '{updated_product.title}' updated successfully.")
-else:
-    # Create a new product if it doesn't exist
-    new_product = shopify.Product.create(product_data) 
-    if new_product.errors:
-        print(f"Error creating product {product_data['title']}: {new_product.errors.full_messages()}")
+    if existing_product:
+        print(f"Product with SKU {product_data['variants'][0]['sku']} already exists with ID: {existing_product.id}")
+        # Update the existing product with new data
+        updated_product = update_existing_product(existing_product, product_data)
+        print(f"Product '{updated_product.title}' updated successfully.")
     else:
-        print(f"Product '{new_product.title}' created successfully with ID: {new_product.id}")
+        # Create a new product if it doesn't exist
+        new_product = shopify.Product.create(product_data) 
+        if new_product.errors:
+            print(f"Error creating product {product_data['title']}: {new_product.errors.full_messages()}")
+        else:
+            print(f"Product '{new_product.title}' created successfully with ID: {new_product.id}")
 
-        # Step 3: Update inventory for each variant
-        for variant in new_product.variants:
-            inventory_item_id = variant.inventory_item_id
-            for variant_data in product_data['variants']:
-                if variant_data['option1'] == variant.option1:
-                    quantity = variant_data['inventory_quantity']
-                    break
+            # Step 3: Update inventory for each variant
+            for variant in new_product.variants:
+                inventory_item_id = variant.inventory_item_id
+                for variant_data in product_data['variants']:
+                    if variant_data['option1'] == variant.option1:
+                        quantity = variant_data['inventory_quantity']
+                        break
 
-            # Update inventory level at the specific location with retry logic
-            set_inventory_with_retry(location_id, inventory_item_id, quantity)
+                # Update inventory level at the specific location with retry logic
+                set_inventory_with_retry(location_id, inventory_item_id, quantity)

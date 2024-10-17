@@ -11,6 +11,7 @@ from pymongo.errors import ConnectionFailure
 from requests.packages.urllib3.util.retry import Retry # type: ignore
 from upload_shopify import upload_product_to_shopify
 from bs4 import BeautifulSoup
+
 import time
 import re
 import os
@@ -19,6 +20,8 @@ import shopify
 import json
 
 app = Flask(__name__)
+
+
 
 # MongoDB Configuration
 try:

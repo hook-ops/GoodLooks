@@ -4,8 +4,11 @@ from pymongo.errors import ConnectionFailure
 import time
 import base64
 import requests
+from dotenv import load_dotenv
 import os
 
+
+load_dotenv()
 ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
 
 # MongoDB Configuration
